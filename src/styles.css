@@ -1,0 +1,287 @@
+/* =========================
+   BASE RESET
+========================= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #f5f7fb;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.app-layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* =========================
+   LEFT PANE
+========================= */
+.left-pane {
+  width: 50%;
+  background: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  border-right: 1px solid #e5e7eb;
+}
+
+/* =========================
+   MODE TOGGLE
+========================= */
+.mode-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.mode-toggle button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #f1f5f9;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.mode-toggle .active {
+  background: #2563eb;
+  color: white;
+}
+
+/* =========================
+   INPUTS
+========================= */
+.input label {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.input input,
+.input select,
+.input textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+textarea {
+  min-height: 600px;
+  font-family: monospace;
+}
+
+/* =========================
+   DATE ROW (extended, not replaced)
+========================= */
+.date-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* REMOVE DATE BUTTON */
+.remove-date {
+  background: #fee2e2;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #991b1b;
+  font-weight: bold;
+}
+
+.remove-date:hover {
+  background: #fecaca;
+}
+
+/* =========================
+   PRIMARY BUTTON
+========================= */
+.send-btn {
+  padding: 10px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.send-btn:hover {
+  background: #1e40af;
+}
+
+.send-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* SECONDARY BUTTON (Add date) */
+.secondary-btn {
+  padding: 8px;
+  background: #e2e8f0;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.secondary-btn:hover {
+  background: #cbd5f5;
+}
+
+/* =========================
+   ERROR BOX
+========================= */
+.error-box {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+/* =========================
+   RIGHT PANE
+========================= */
+.right-pane {
+  width: 50%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* =========================
+   RESPONSE JSON
+========================= */
+.response-json {
+  height: 30%;
+  background: #0f172a;
+  color: #e5e7eb;
+  padding: 10px;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+/* =========================
+   RESPONSE TABLE
+========================= */
+.response-table {
+  height: 70%;
+  overflow: auto;
+}
+
+/* =========================
+   TABLE ENHANCEMENTS (NEW)
+========================= */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  text-align: left;
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f1f5f9;
+  z-index: 1;
+}
+
+/* SORTABLE COLUMN */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* =========================
+   PROGRESS BAR (NEW)
+========================= */
+.progress-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #2563eb;
+  transition: width 0.3s ease;
+}
+/* =========================
+   RESPONSE SUMMARY (NEW)
+========================= */
+.response-summary {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.response-summary h4 {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+}
+
+.response-summary ul {
+  margin: 6px 0 0 0;
+  padding-left: 16px;
+}
+
+.response-summary li {
+  margin-bottom: 4px;
+}
+/* =========================
+   RESPONSE SUMMARY (ENHANCED)
+========================= */
+.response-summary {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.summary-card {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 0;
+}
+
+.summary-card:last-child {
+  border-bottom: none;
+}
+
+.summary-section {
+  margin-top: 6px;
+}
+
+.summary-section span {
+  font-weight: 600;
+}
+
+.summary-section ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}
+
+.summary-section li {
+  margin-bottom: 2px;
+}
