@@ -49,7 +49,7 @@ export default function App() {
   };
 
   /* =========================
-     SUMMARY BUILDER (UPDATED)
+     SUMMARY BUILDER
   ========================= */
   const buildSummary = () => {
     const summary = {};
@@ -93,7 +93,7 @@ export default function App() {
   };
 
   /* =========================
-     REQUEST LOGIC (UNCHANGED)
+     REQUEST LOGIC (FIXED)
   ========================= */
   const sendRequest = async () => {
     setLoading(true);
@@ -104,8 +104,9 @@ export default function App() {
     try {
       const baseBody = body ? JSON.parse(body) : {};
 
+      // ---------- CUSTOM SEARCH ----------
       if (mode === "custom") {
-        const res = await fetch("http://localhost:5000/api/proxy", {
+        const res = await fetch("/api/proxy", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -124,6 +125,7 @@ export default function App() {
         return;
       }
 
+      // ---------- MULTI SEARCH ----------
       const validDates = dateRanges.filter(
         (d) => d.checkIn && d.checkOut
       );
@@ -148,7 +150,7 @@ export default function App() {
           }
         };
 
-        const res = await fetch("http://localhost:5000/api/proxy", {
+        const res = await fetch("/api/proxy", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -187,10 +189,16 @@ export default function App() {
       {/* LEFT PANE */}
       <div className="left-pane">
         <div className="mode-toggle">
-          <button className={mode === "custom" ? "active" : ""} onClick={() => setMode("custom")}>
+          <button
+            className={mode === "custom" ? "active" : ""}
+            onClick={() => setMode("custom")}
+          >
             Custom Search
           </button>
-          <button className={mode === "multi" ? "active" : ""} onClick={() => setMode("multi")}>
+          <button
+            className={mode === "multi" ? "active" : ""}
+            onClick={() => setMode("multi")}
+          >
             Multi Search
           </button>
         </div>
@@ -209,18 +217,36 @@ export default function App() {
           <>
             <div className="input">
               <label>Hotel IDs (comma separated)</label>
-              <input value={hotelIds} onChange={(e) => setHotelIds(e.target.value)} />
+              <input
+                value={hotelIds}
+                onChange={(e) => setHotelIds(e.target.value)}
+              />
             </div>
 
             {dateRanges.map((d, i) => (
               <div key={i} className="date-row">
-                <input type="date" value={d.checkIn} onChange={(e) => updateDate(i, "checkIn", e.target.value)} />
-                <input type="date" value={d.checkOut} onChange={(e) => updateDate(i, "checkOut", e.target.value)} />
-                <button className="remove-date" onClick={() => removeDateRow(i)}>✕</button>
+                <input
+                  type="date"
+                  value={d.checkIn}
+                  onChange={(e) => updateDate(i, "checkIn", e.target.value)}
+                />
+                <input
+                  type="date"
+                  value={d.checkOut}
+                  onChange={(e) => updateDate(i, "checkOut", e.target.value)}
+                />
+                <button
+                  className="remove-date"
+                  onClick={() => removeDateRow(i)}
+                >
+                  ✕
+                </button>
               </div>
             ))}
 
-            <button onClick={addDateRow} className="secondary-btn">➕ Add another date</button>
+            <button onClick={addDateRow} className="secondary-btn">
+              ➕ Add another date
+            </button>
           </>
         )}
 
@@ -230,7 +256,9 @@ export default function App() {
         </div>
 
         <button onClick={sendRequest} className="send-btn" disabled={loading}>
-          {loading ? `Searching ${progress.current} / ${progress.total}` : "Send Request"}
+          {loading
+            ? `Searching ${progress.current} / ${progress.total}`
+            : "Send Request"}
         </button>
 
         {loading && (
@@ -256,7 +284,6 @@ export default function App() {
           <pre>{JSON.stringify(rawJson, null, 2)}</pre>
         </div>
 
-        {/* 🔍 ENHANCED SUMMARY */}
         <div className="response-summary">
           <h4>Response Summary</h4>
 
