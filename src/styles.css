@@ -5,8 +5,13 @@
   box-sizing: border-box;
 }
 
+html,
 body {
+  height: 100%;
   margin: 0;
+}
+
+body {
   font-family: Inter, system-ui, sans-serif;
   background: #f5f7fb;
 }
@@ -17,6 +22,7 @@ body {
 .app-layout {
   display: flex;
   height: 100vh;
+  overflow: hidden; /* CRITICAL */
 }
 
 /* =========================
@@ -67,7 +73,6 @@ body {
 }
 
 .input input,
-.input select,
 .input textarea {
   width: 100%;
   padding: 8px;
@@ -76,12 +81,14 @@ body {
 }
 
 textarea {
-  min-height: 600px;
+  min-height: 240px;
+  max-height: 360px;
+  resize: vertical;
   font-family: monospace;
 }
 
 /* =========================
-   DATE ROW (extended, not replaced)
+   DATE ROW
 ========================= */
 .date-row {
   display: flex;
@@ -89,7 +96,6 @@ textarea {
   align-items: center;
 }
 
-/* REMOVE DATE BUTTON */
 .remove-date {
   background: #fee2e2;
   border: none;
@@ -100,12 +106,8 @@ textarea {
   font-weight: bold;
 }
 
-.remove-date:hover {
-  background: #fecaca;
-}
-
 /* =========================
-   PRIMARY BUTTON
+   BUTTONS
 ========================= */
 .send-btn {
   padding: 10px;
@@ -117,16 +119,11 @@ textarea {
   cursor: pointer;
 }
 
-.send-btn:hover {
-  background: #1e40af;
-}
-
 .send-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* SECONDARY BUTTON (Add date) */
 .secondary-btn {
   padding: 8px;
   background: #e2e8f0;
@@ -134,10 +131,6 @@ textarea {
   border: none;
   cursor: pointer;
   font-weight: 600;
-}
-
-.secondary-btn:hover {
-  background: #cbd5f5;
 }
 
 /* =========================
@@ -151,21 +144,25 @@ textarea {
 }
 
 /* =========================
-   RIGHT PANE
+   RIGHT PANE (FIXED HEIGHT)
 ========================= */
 .right-pane {
   width: 50%;
   padding: 16px;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: hidden; /* CRITICAL */
   gap: 12px;
 }
 
 /* =========================
-   RESPONSE JSON
+   RIGHT PANE SECTIONS
 ========================= */
+
+/* 25% JSON */
 .response-json {
-  height: 30%;
+  flex: 0 0 25%;
   background: #0f172a;
   color: #e5e7eb;
   padding: 10px;
@@ -173,16 +170,48 @@ textarea {
   overflow: auto;
 }
 
-/* =========================
-   RESPONSE TABLE
-========================= */
+/* 25% SUMMARY */
+.response-summary {
+  flex: 0 0 25%;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  overflow-y: auto;
+}
+
+/* 50% TABLE */
 .response-table {
-  height: 70%;
+  flex: 1; /* remaining 50% */
   overflow: auto;
+  background: #ffffff;
+  border-radius: 8px;
 }
 
 /* =========================
-   TABLE ENHANCEMENTS (NEW)
+   SUMMARY STYLES
+========================= */
+.summary-card {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 0;
+}
+
+.summary-section span {
+  font-weight: 600;
+}
+
+/* Cheapest supplier highlight */
+.cheapest-supplier {
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* =========================
+   TABLE
 ========================= */
 .data-table {
   width: 100%;
@@ -204,14 +233,8 @@ textarea {
   z-index: 1;
 }
 
-/* SORTABLE COLUMN */
-.sortable {
-  cursor: pointer;
-  user-select: none;
-}
-
 /* =========================
-   PROGRESS BAR (NEW)
+   PROGRESS BAR
 ========================= */
 .progress-bar {
   height: 6px;
@@ -224,72 +247,4 @@ textarea {
   height: 100%;
   background: #2563eb;
   transition: width 0.3s ease;
-}
-/* =========================
-   RESPONSE SUMMARY (NEW)
-========================= */
-.response-summary {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 13px;
-}
-
-.response-summary h4 {
-  margin: 0 0 6px 0;
-  font-size: 14px;
-}
-
-.response-summary ul {
-  margin: 6px 0 0 0;
-  padding-left: 16px;
-}
-
-.response-summary li {
-  margin-bottom: 4px;
-}
-/* =========================
-   RESPONSE SUMMARY (ENHANCED)
-========================= */
-.response-summary {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 13px;
-}
-
-.summary-card {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 8px 0;
-}
-
-.summary-card:last-child {
-  border-bottom: none;
-}
-
-.summary-section {
-  margin-top: 6px;
-}
-
-.summary-section span {
-  font-weight: 600;
-}
-
-.summary-section ul {
-  margin: 4px 0 0 16px;
-  padding: 0;
-}
-
-.summary-section li {
-  margin-bottom: 2px;
-}
-/* Cheapest supplier highlight */
-.cheapest-supplier {
-  background: #dcfce7;
-  color: #166534;
-  font-weight: 700;
-  border-radius: 4px;
-  padding: 2px 6px;
 }
