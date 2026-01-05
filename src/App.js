@@ -11,10 +11,7 @@ export default function App() {
   const [token, setToken] = useState("");
 
   const [hotelIds, setHotelIds] = useState("");
-
-  const [dateRanges, setDateRanges] = useState([
-    { checkIn: "", checkOut: "" }
-  ]);
+  const [dateRanges, setDateRanges] = useState([{ checkIn: "", checkOut: "" }]);
 
   const [body, setBody] = useState("");
   const [data, setData] = useState([]);
@@ -33,9 +30,8 @@ export default function App() {
     return `${m}-${day}-${y}`;
   };
 
-  const addDateRow = () => {
+  const addDateRow = () =>
     setDateRanges([...dateRanges, { checkIn: "", checkOut: "" }]);
-  };
 
   const removeDateRow = (index) => {
     if (dateRanges.length === 1) return;
@@ -49,7 +45,7 @@ export default function App() {
   };
 
   /* =========================
-     SUMMARY BUILDER
+     SUMMARY BUILDER (CHEAPEST LOGIC)
   ========================= */
   const buildSummary = () => {
     const summary = {};
@@ -66,7 +62,7 @@ export default function App() {
         if (!summary[hotel.HotelId]) {
           summary[hotel.HotelId] = {
             dates: new Set(),
-            suppliers: new Set()
+            suppliers: {}
           };
         }
 
@@ -80,20 +76,38 @@ export default function App() {
               ? supplierMap[supplierCode]
               : "oth";
 
-          summary[hotel.HotelId].suppliers.add(supplierName);
+          opt.HotelRooms.forEach((roomGroup) => {
+            roomGroup.forEach((room) => {
+              const price = Number(room.Price);
+
+              if (
+                !summary[hotel.HotelId].suppliers[supplierName] ||
+                price <
+                  summary[hotel.HotelId].suppliers[supplierName]
+              ) {
+                summary[hotel.HotelId].suppliers[supplierName] = price;
+              }
+            });
+          });
         });
       });
     });
 
-    return Object.entries(summary).map(([hotelId, info]) => ({
-      hotelId,
-      dates: Array.from(info.dates),
-      suppliers: Array.from(info.suppliers)
-    }));
+    return Object.entries(summary).map(([hotelId, info]) => {
+      const supplierEntries = Object.entries(info.suppliers)
+        .map(([name, price]) => ({ name, price }))
+        .sort((a, b) => a.price - b.price);
+
+      return {
+        hotelId,
+        dates: Array.from(info.dates),
+        suppliers: supplierEntries
+      };
+    });
   };
 
   /* =========================
-     REQUEST LOGIC (FIXED)
+     REQUEST LOGIC (UNCHANGED)
   ========================= */
   const sendRequest = async () => {
     setLoading(true);
@@ -104,7 +118,6 @@ export default function App() {
     try {
       const baseBody = body ? JSON.parse(body) : {};
 
-      // ---------- CUSTOM SEARCH ----------
       if (mode === "custom") {
         const res = await fetch("/api/proxy", {
           method: "POST",
@@ -125,7 +138,6 @@ export default function App() {
         return;
       }
 
-      // ---------- MULTI SEARCH ----------
       const validDates = dateRanges.filter(
         (d) => d.checkIn && d.checkOut
       );
@@ -186,19 +198,12 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      {/* LEFT PANE */}
       <div className="left-pane">
         <div className="mode-toggle">
-          <button
-            className={mode === "custom" ? "active" : ""}
-            onClick={() => setMode("custom")}
-          >
+          <button className={mode === "custom" ? "active" : ""} onClick={() => setMode("custom")}>
             Custom Search
           </button>
-          <button
-            className={mode === "multi" ? "active" : ""}
-            onClick={() => setMode("multi")}
-          >
+          <button className={mode === "multi" ? "active" : ""} onClick={() => setMode("multi")}>
             Multi Search
           </button>
         </div>
@@ -217,36 +222,18 @@ export default function App() {
           <>
             <div className="input">
               <label>Hotel IDs (comma separated)</label>
-              <input
-                value={hotelIds}
-                onChange={(e) => setHotelIds(e.target.value)}
-              />
+              <input value={hotelIds} onChange={(e) => setHotelIds(e.target.value)} />
             </div>
 
             {dateRanges.map((d, i) => (
               <div key={i} className="date-row">
-                <input
-                  type="date"
-                  value={d.checkIn}
-                  onChange={(e) => updateDate(i, "checkIn", e.target.value)}
-                />
-                <input
-                  type="date"
-                  value={d.checkOut}
-                  onChange={(e) => updateDate(i, "checkOut", e.target.value)}
-                />
-                <button
-                  className="remove-date"
-                  onClick={() => removeDateRow(i)}
-                >
-                  ✕
-                </button>
+                <input type="date" value={d.checkIn} onChange={(e) => updateDate(i, "checkIn", e.target.value)} />
+                <input type="date" value={d.checkOut} onChange={(e) => updateDate(i, "checkOut", e.target.value)} />
+                <button className="remove-date" onClick={() => removeDateRow(i)}>✕</button>
               </div>
             ))}
 
-            <button onClick={addDateRow} className="secondary-btn">
-              ➕ Add another date
-            </button>
+            <button onClick={addDateRow} className="secondary-btn">➕ Add another date</button>
           </>
         )}
 
@@ -256,36 +243,25 @@ export default function App() {
         </div>
 
         <button onClick={sendRequest} className="send-btn" disabled={loading}>
-          {loading
-            ? `Searching ${progress.current} / ${progress.total}`
-            : "Send Request"}
+          {loading ? `Searching ${progress.current} / ${progress.total}` : "Send Request"}
         </button>
 
         {loading && (
           <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{
-                width:
-                  progress.total > 0
-                    ? `${(progress.current / progress.total) * 100}%`
-                    : "0%"
-              }}
-            />
+            <div className="progress-fill" style={{ width: `${(progress.current / progress.total) * 100}%` }} />
           </div>
         )}
 
         {error && <div className="error-box">{error}</div>}
       </div>
 
-      {/* RIGHT PANE */}
       <div className="right-pane">
         <div className="response-json">
           <pre>{JSON.stringify(rawJson, null, 2)}</pre>
         </div>
 
         <div className="response-summary">
-          <h4>Response Summary</h4>
+          <h4>Cheapest Rates by Supplier</h4>
 
           {summary.map((s) => (
             <div key={s.hotelId} className="summary-card">
@@ -294,17 +270,20 @@ export default function App() {
               <div className="summary-section">
                 <span>Dates:</span>
                 <ul>
-                  {s.dates.map((d) => (
-                    <li key={d}>{d}</li>
-                  ))}
+                  {s.dates.map((d) => <li key={d}>{d}</li>)}
                 </ul>
               </div>
 
               <div className="summary-section">
-                <span>Suppliers ({s.suppliers.length}):</span>
+                <span>Suppliers:</span>
                 <ul>
-                  {s.suppliers.map((sup) => (
-                    <li key={sup}>{sup}</li>
+                  {s.suppliers.map((sup, i) => (
+                    <li
+                      key={sup.name}
+                      className={i === 0 ? "cheapest-supplier" : ""}
+                    >
+                      {sup.name} – ${sup.price}
+                    </li>
                   ))}
                 </ul>
               </div>
