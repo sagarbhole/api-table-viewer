@@ -64,6 +64,12 @@ export default function ApiTable({ data }) {
                   : "N/A";
             }
 
+            // New: consolidate into Refundable + Refund Info
+            const isRefundable = freeCancelTill && freeCancelTill !== "N/A";
+            const refundInfo = isRefundable
+              ? `${freeCancelTill}${freeCancelPrice && freeCancelPrice !== "N/A" ? " — " + freeCancelPrice : ""}`
+              : "-";
+
             rows.push({
               hotelId,
               supplierName,
@@ -72,11 +78,13 @@ export default function ApiTable({ data }) {
               roomType: room.RoomTypeName,
               meal: room.MealName,
               price: room.Price,
-              status: room.BookingStatus,
+              // status removed (we keep it in object if needed later)
               freeCancelTill,
               freeCancelPrice,
               paidCancelFrom,
-              paidCancelPrice
+              paidCancelPrice,
+              refundable: isRefundable ? "Yes" : "No",
+              refundInfo
             });
           });
         });
@@ -92,14 +100,14 @@ export default function ApiTable({ data }) {
   if (hotelSort) {
     sortedRows.sort((a, b) =>
       hotelSort === "asc"
-        ? a.hotelId - b.hotelId
-        : b.hotelId - a.hotelId
+        ? Number(a.hotelId) - Number(b.hotelId)
+        : Number(b.hotelId) - Number(a.hotelId)
     );
   } else if (priceSort) {
     sortedRows.sort((a, b) =>
       priceSort === "asc"
-        ? a.price - b.price
-        : b.price - a.price
+        ? Number(a.price) - Number(b.price)
+        : Number(b.price) - Number(a.price)
     );
   }
 
@@ -145,7 +153,11 @@ export default function ApiTable({ data }) {
               Price{priceArrow}
             </th>
 
-            <th>Status</th>
+            {/* Status column removed */}
+
+            {/* New: Refundable + Refund Info */}
+            <th>Refundable</th>
+            <th>Refund Info</th>
 
             <th>Free Cancel Till</th>
             <th>Free Cancel Price</th>
@@ -166,7 +178,11 @@ export default function ApiTable({ data }) {
               <td>{row.roomType}</td>
               <td>{row.meal}</td>
               <td>{row.price}</td>
-              <td>{row.status}</td>
+
+              {/* status removed */}
+
+              <td>{row.refundable}</td>
+              <td>{row.refundInfo}</td>
 
               <td>{row.freeCancelTill}</td>
               <td>{row.freeCancelPrice}</td>

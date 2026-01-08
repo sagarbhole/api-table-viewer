@@ -68,11 +68,23 @@ export default function App() {
   };
 
   /* =========================
-     MATRIX SUMMARY (UNCHANGED)
+     MATRIX SUMMARY (UPDATED)
+     - Now also computes Not Found per date
+     - Returns requestedCount and unique found count across responses
   ========================= */
-  const buildMatrixSummary = () => {
+  const buildMatrixSummary = (hotelIdsStr = "") => {
     const summary = {};
     const supplierSet = new Set();
+    const notFoundMap = {};
+    const foundGlobalSet = new Set();
+
+    // parse requested hotel ids into a set (strings)
+    const requestedArr = (hotelIdsStr || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const requestedSet = new Set(requestedArr.map(String));
+    const requestedCount = requestedSet.size;
 
     data.forEach((response) => {
       const dateKey = response?.__meta
@@ -82,11 +94,17 @@ export default function App() {
       if (!summary[dateKey]) summary[dateKey] = {};
 
       const hotels = response?.AvailabilityRS?.HotelResult || [];
+      const foundThisDateSet = new Set();
 
       hotels.forEach((hotel) => {
+        const hotelId = String(hotel.HotelId);
+        foundThisDateSet.add(hotelId);
+        foundGlobalSet.add(hotelId);
+
         let cheapestSupplier = null;
         let cheapestPrice = Infinity;
 
+        // Determine cheapest supplier per hotel (existing logic)
         hotel.HotelOption.forEach((opt) => {
           const supplierCode = opt.HotelOptionId?.split("|")[2];
           const supplier = supplierMap[supplierCode] || "oth";
@@ -108,9 +126,28 @@ export default function App() {
             (summary[dateKey][cheapestSupplier] || 0) + 1;
         }
       });
+
+      // compute not-found for this date (only if user provided hotelIds)
+      let notFoundCount = 0;
+      if (requestedCount > 0) {
+        notFoundCount = Array.from(requestedSet).filter(
+          (id) => !foundThisDateSet.has(id)
+        ).length;
+      } else {
+        // If user didn't provide hotelIds, not-found doesn't apply — show 0
+        notFoundCount = 0;
+      }
+
+      notFoundMap[dateKey] = notFoundCount;
     });
 
-    return { summary, suppliers: Array.from(supplierSet) };
+    return {
+      summary,
+      suppliers: Array.from(supplierSet),
+      notFoundMap,
+      requestedCount,
+      foundUniqueCount: foundGlobalSet.size
+    };
   };
 
   /* =========================
@@ -124,9 +161,7 @@ export default function App() {
 
     try {
       const baseBody = body ? JSON.parse(body) : {};
-      const validDates = dateRanges.filter(
-        (d) => d.checkIn && d.checkOut
-      );
+      const validDates = dateRanges.filter((d) => d.checkIn && d.checkOut);
 
       setProgress({ current: 0, total: validDates.length });
       const allResponses = [];
@@ -178,7 +213,8 @@ export default function App() {
     }
   };
 
-  const { summary, suppliers } = buildMatrixSummary();
+  const { summary, suppliers, notFoundMap, requestedCount, foundUniqueCount } =
+    buildMatrixSummary(hotelIds);
 
   return (
     <div className="app-layout">
@@ -294,11 +330,17 @@ export default function App() {
         </div>
 
         <div className="response-summary">
-          <h4>Cheapest Supplier Coverage</h4>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h4 style={{ margin: 0 }}>Cheapest Supplier Coverage</h4>
+            <div style={{ fontSize: 13 }}>
+              Found <strong>{foundUniqueCount}</strong> hotels out of <strong>{requestedCount || "—"}</strong> searched
+            </div>
+          </div>
 
-          <table className="summary-matrix">
+          <table className="summary-matrix" style={{ marginTop: 12 }}>
             <thead>
               <tr>
+                <th>Not Found</th>
                 <th>Date</th>
                 {suppliers.map((s) => (
                   <th key={s}>{s}</th>
@@ -307,16 +349,16 @@ export default function App() {
             </thead>
             <tbody>
               {Object.entries(summary).map(([date, counts]) => {
-                const max = Math.max(...Object.values(counts));
+                const supplierCounts = suppliers.map((s) => counts[s] || 0);
+                const max = supplierCounts.length ? Math.max(...supplierCounts) : 0;
                 return (
                   <tr key={date}>
+                    <td>{notFoundMap[date] || 0}</td>
                     <td>{date}</td>
                     {suppliers.map((s) => (
                       <td
                         key={s}
-                        className={
-                          counts[s] === max ? "cheapest-cell" : ""
-                        }
+                        className={counts[s] === max && max > 0 ? "cheapest-cell" : ""}
                       >
                         {counts[s] || 0}
                       </td>
