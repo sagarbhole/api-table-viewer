@@ -16,7 +16,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-  /* 🔥 RESIZER STATE */
+  /*  RESIZER STATE */
   const [leftWidth, setLeftWidth] = useState(50);
   const isDragging = useRef(false);
 
@@ -214,12 +214,12 @@ export default function App() {
     <div className="app-layout">
       {/* LEFT PANE */}
       <div className="left-pane" style={{ width: `${leftWidth}%` }}>
-        {/* 🔥 YOUR ORIGINAL LEFT UI — UNTOUCHED */}
+        {/*  YOUR ORIGINAL LEFT UI — UNTOUCHED */}
         {/* (inputs, dates, body, send button etc.) */}
         {/* EXACT SAME AS YOUR WORKING VERSION */}
       </div>
 
-      {/* ✅ RESIZER FIX */}
+      {/*  RESIZER FIX */}
       <div className="resizer" onMouseDown={startDrag} />
 
       {/* RIGHT PANE */}
