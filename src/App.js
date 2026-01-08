@@ -16,7 +16,6 @@ export default function App() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
-
   const [expandedDates, setExpandedDates] = useState({});
 
   /* =========================
@@ -43,8 +42,7 @@ export default function App() {
   };
 
   /* =========================
-     SUMMARY MATRIX BUILDER
-     (COUNTS OF CHEAPEST SUPPLIER)
+     MATRIX SUMMARY (CORRECT)
   ========================= */
   const buildMatrixSummary = () => {
     const summary = {};
@@ -104,13 +102,11 @@ export default function App() {
 
     try {
       const baseBody = body ? JSON.parse(body) : {};
-
       const validDates = dateRanges.filter(
         (d) => d.checkIn && d.checkOut
       );
 
       setProgress({ current: 0, total: validDates.length });
-
       const allResponses = [];
 
       for (let i = 0; i < validDates.length; i++) {
@@ -118,7 +114,6 @@ export default function App() {
         setProgress({ current: i + 1, total: validDates.length });
 
         const reqBody = JSON.parse(JSON.stringify(baseBody));
-
         reqBody.Request = {
           ...reqBody.Request,
           CheckInDate: formatDateMMDDYYYY(range.checkIn),
@@ -165,16 +160,71 @@ export default function App() {
 
   return (
     <div className="app-layout">
+      {/* ✅ LEFT PANE (RESTORED, UNCHANGED) */}
       <div className="left-pane">
-        {/* LEFT PANE UNCHANGED */}
+        <div className="mode-toggle">
+          <button className={mode === "custom" ? "active" : ""} onClick={() => setMode("custom")}>
+            Custom Search
+          </button>
+          <button className={mode === "multi" ? "active" : ""} onClick={() => setMode("multi")}>
+            Multi Search
+          </button>
+        </div>
+
+        <div className="input">
+          <label>API Endpoint</label>
+          <input value={endpoint} onChange={(e) => setEndpoint(e.target.value)} />
+        </div>
+
+        <div className="input">
+          <label>Authorization Token</label>
+          <input value={token} onChange={(e) => setToken(e.target.value)} />
+        </div>
+
+        {mode === "multi" && (
+          <>
+            <div className="input">
+              <label>Hotel IDs (comma separated)</label>
+              <input value={hotelIds} onChange={(e) => setHotelIds(e.target.value)} />
+            </div>
+
+            {dateRanges.map((d, i) => (
+              <div key={i} className="date-row">
+                <input type="date" value={d.checkIn} onChange={(e) => updateDate(i, "checkIn", e.target.value)} />
+                <input type="date" value={d.checkOut} onChange={(e) => updateDate(i, "checkOut", e.target.value)} />
+                <button className="remove-date" onClick={() => removeDateRow(i)}>✕</button>
+              </div>
+            ))}
+
+            <button onClick={addDateRow} className="secondary-btn">➕ Add another date</button>
+          </>
+        )}
+
+        <div className="input">
+          <label>Request Body (JSON)</label>
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} />
+        </div>
+
+        <button onClick={sendRequest} className="send-btn" disabled={loading}>
+          {loading ? `Searching ${progress.current} / ${progress.total}` : "Send Request"}
+        </button>
+
+        {loading && (
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${(progress.current / progress.total) * 100}%` }} />
+          </div>
+        )}
+
+        {error && <div className="error-box">{error}</div>}
       </div>
 
+      {/* ✅ RIGHT PANE */}
       <div className="right-pane">
         <div className="response-json">
           <pre>{JSON.stringify(rawJson, null, 2)}</pre>
         </div>
 
-        {/* 🔥 MATRIX SUMMARY */}
+        {/* MATRIX SUMMARY */}
         <div className="response-summary">
           <h4>Cheapest Supplier Coverage</h4>
 
@@ -182,44 +232,24 @@ export default function App() {
             <thead>
               <tr>
                 <th>Date</th>
-                {suppliers.map((s) => (
-                  <th key={s}>{s}</th>
-                ))}
-                <th></th>
+                {suppliers.map((s) => <th key={s}>{s}</th>)}
               </tr>
             </thead>
             <tbody>
               {Object.entries(summary).map(([date, counts]) => {
                 const max = Math.max(...Object.values(counts));
                 return (
-                  <React.Fragment key={date}>
-                    <tr>
-                      <td>{date}</td>
-                      {suppliers.map((s) => (
-                        <td
-                          key={s}
-                          className={
-                            counts[s] === max ? "cheapest-cell" : ""
-                          }
-                        >
-                          {counts[s] || 0}
-                        </td>
-                      ))}
-                      <td>
-                        <button
-                          className="expand-btn"
-                          onClick={() =>
-                            setExpandedDates((p) => ({
-                              ...p,
-                              [date]: !p[date]
-                            }))
-                          }
-                        >
-                          {expandedDates[date] ? "−" : "+"}
-                        </button>
+                  <tr key={date}>
+                    <td>{date}</td>
+                    {suppliers.map((s) => (
+                      <td
+                        key={s}
+                        className={counts[s] === max ? "cheapest-cell" : ""}
+                      >
+                        {counts[s] || 0}
                       </td>
-                    </tr>
-                  </React.Fragment>
+                    ))}
+                  </tr>
                 );
               })}
             </tbody>
