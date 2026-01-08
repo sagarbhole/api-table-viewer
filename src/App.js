@@ -4,7 +4,6 @@ import supplierMap from "./data/suppliers.json";
 import "./styles.css";
 
 export default function App() {
-  const [mode, setMode] = useState("custom");
   const [endpoint, setEndpoint] = useState("");
   const [method] = useState("POST");
   const [token, setToken] = useState("");
@@ -22,35 +21,19 @@ export default function App() {
   const isDragging = useRef(false);
 
   /* =========================
-     RESIZER HANDLERS
-  ========================= */
-  const startDrag = () => {
-    isDragging.current = true;
-    document.addEventListener("mousemove", onDrag);
-    document.addEventListener("mouseup", stopDrag);
-  };
-
-  const onDrag = (e) => {
-    if (!isDragging.current) return;
-    const newWidth = (e.clientX / window.innerWidth) * 100;
-    if (newWidth > 20 && newWidth < 80) {
-      setLeftWidth(newWidth);
-    }
-  };
-
-  const stopDrag = () => {
-    isDragging.current = false;
-    document.removeEventListener("mousemove", onDrag);
-    document.removeEventListener("mouseup", stopDrag);
-  };
-
-  /* =========================
      HELPERS
   ========================= */
   const formatDateMMDDYYYY = (d) => {
     if (!d) return "";
     const [y, m, day] = d.split("-");
     return `${m}-${day}-${y}`;
+  };
+
+  // ✅ Display formatter
+  const formatDateDDMMYYYY = (d) => {
+    if (!d || d === "N/A") return "N/A";
+    const [y, m, day] = d.split("-");
+    return `${day}-${m}-${y}`;
   };
 
   const addDateRow = () =>
@@ -85,7 +68,9 @@ export default function App() {
 
     data.forEach((response) => {
       const dateKey = response?.__meta
-        ? `${response.__meta.checkIn} → ${response.__meta.checkOut}`
+        ? `${formatDateDDMMYYYY(response.__meta.checkIn)} → ${formatDateDDMMYYYY(
+            response.__meta.checkOut
+          )}`
         : "N/A";
 
       if (!summary[dateKey]) summary[dateKey] = {};
@@ -158,7 +143,6 @@ export default function App() {
 
       for (let i = 0; i < validDates.length; i++) {
         const range = validDates[i];
-        setProgress({ current: i + 1, total: validDates.length });
 
         const reqBody = JSON.parse(JSON.stringify(baseBody));
         reqBody.Request = {
@@ -210,21 +194,6 @@ export default function App() {
     <div className="app-layout">
       {/* LEFT PANE */}
       <div className="left-pane" style={{ width: `${leftWidth}%` }}>
-        <div className="mode-toggle">
-          <button
-            className={mode === "custom" ? "active" : ""}
-            onClick={() => setMode("custom")}
-          >
-            Custom Search
-          </button>
-          <button
-            className={mode === "multi" ? "active" : ""}
-            onClick={() => setMode("multi")}
-          >
-            Multi Search
-          </button>
-        </div>
-
         <div className="input">
           <label>API Endpoint</label>
           <input value={endpoint} onChange={(e) => setEndpoint(e.target.value)} />
@@ -235,56 +204,41 @@ export default function App() {
           <input value={token} onChange={(e) => setToken(e.target.value)} />
         </div>
 
-        {mode === "multi" && (
-          <>
-            <div className="input">
-              <label>Hotel IDs (comma separated)</label>
-              <input
-                value={hotelIds}
-                onChange={(e) => setHotelIds(e.target.value)}
-              />
-            </div>
+        <div className="input">
+          <label>Hotel IDs (comma separated)</label>
+          <input
+            value={hotelIds}
+            onChange={(e) => setHotelIds(e.target.value)}
+          />
+        </div>
 
-            {/* ✅ DATE HEADING ADDED */}
-            <div className="date-heading">Dates</div>
+        <div className="date-heading">Dates</div>
 
-            {dateRanges.map((d, i) => (
-              <div key={i} className="date-row">
-                <input
-                  type="date"
-                  value={d.checkIn}
-                  onChange={(e) =>
-                    updateDate(i, "checkIn", e.target.value)
-                  }
-                />
-                <input
-                  type="date"
-                  value={d.checkOut}
-                  onChange={(e) =>
-                    updateDate(i, "checkOut", e.target.value)
-                  }
-                />
-                <button
-                  className="remove-date"
-                  onClick={() => removeDateRow(i)}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-
-            <button onClick={addDateRow} className="secondary-btn">
-              ➕ Add another date
+        {dateRanges.map((d, i) => (
+          <div key={i} className="date-row">
+            <input
+              type="date"
+              value={d.checkIn}
+              onChange={(e) => updateDate(i, "checkIn", e.target.value)}
+            />
+            <input
+              type="date"
+              value={d.checkOut}
+              onChange={(e) => updateDate(i, "checkOut", e.target.value)}
+            />
+            <button className="remove-date" onClick={() => removeDateRow(i)}>
+              ✕
             </button>
-          </>
-        )}
+          </div>
+        ))}
+
+        <button onClick={addDateRow} className="secondary-btn">
+          ➕ Add another date
+        </button>
 
         <div className="input">
           <label>Request Body (JSON)</label>
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-          />
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} />
         </div>
 
         <button onClick={sendRequest} className="send-btn" disabled={loading}>
@@ -293,45 +247,24 @@ export default function App() {
             : "Send Request"}
         </button>
 
-        {loading && (
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{
-                width:
-                  progress.total > 0
-                    ? `${(progress.current / progress.total) * 100}%`
-                    : "0%"
-              }}
-            />
-          </div>
-        )}
-
         {error && <div className="error-box">{error}</div>}
       </div>
 
-      {/* RESIZER */}
-      <div className="resizer" onMouseDown={startDrag} />
+      <div className="resizer" />
 
       {/* RIGHT PANE */}
-      <div
-        className="right-pane"
-        style={{ width: `${100 - leftWidth}%` }}
-      >
+      <div className="right-pane" style={{ width: `${100 - leftWidth}%` }}>
         <div className="response-json">
           <pre>{JSON.stringify(rawJson, null, 2)}</pre>
         </div>
 
         <div className="response-summary">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h4 style={{ margin: 0 }}>Cheapest Supplier Coverage</h4>
-            <div style={{ fontSize: 13 }}>
-              Found <strong>{foundUniqueCount}</strong> hotels out of{" "}
-              <strong>{requestedCount || "—"}</strong> searched
-            </div>
-          </div>
+          <h4>
+            Cheapest Supplier Coverage — Found {foundUniqueCount} /{" "}
+            {requestedCount || "—"}
+          </h4>
 
-          <table className="summary-matrix" style={{ marginTop: 12 }}>
+          <table className="summary-matrix">
             <thead>
               <tr>
                 <th>Not Found</th>
@@ -343,22 +276,15 @@ export default function App() {
             </thead>
             <tbody>
               {Object.entries(summary).map(([date, counts]) => {
-                const supplierCounts = suppliers.map((s) => counts[s] || 0);
-                const max = supplierCounts.length
-                  ? Math.max(...supplierCounts)
-                  : 0;
+                const max = Math.max(...suppliers.map((s) => counts[s] || 0));
                 return (
                   <tr key={date}>
-                    <td>{notFoundMap[date] || 0}</td>
+                    <td>{notFoundMap[date]}</td>
                     <td>{date}</td>
                     {suppliers.map((s) => (
                       <td
                         key={s}
-                        className={
-                          counts[s] === max && max > 0
-                            ? "cheapest-cell"
-                            : ""
-                        }
+                        className={counts[s] === max ? "cheapest-cell" : ""}
                       >
                         {counts[s] || 0}
                       </td>
