@@ -108,8 +108,8 @@ export default function App() {
           opt.HotelRooms.forEach((group) => {
             group.forEach((room) => {
               const price = Number(room.Price);
-              if (R < cheapestPrice) {
-                cheapestPrice = R;
+              if (price < cheapestPrice) {
+                cheapestPrice = price;
                 cheapestSupplier = supplier;
               }
             });
