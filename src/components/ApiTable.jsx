@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import supplierMap from "../data/suppliers.json";
+import hotelMap from "../data/hotels.json";
 
 export default function ApiTable({ data }) {
   const responses = Array.isArray(data) ? data : data ? [data] : [];
@@ -29,6 +30,10 @@ export default function ApiTable({ data }) {
 
     hotelResults.forEach((hotel) => {
       const hotelId = hotel.HotelId;
+
+      // ✅ HOTEL NAME MAPPING
+      const hotelName =
+        hotelMap[String(hotelId)] || "Unknown Hotel";
 
       hotel.HotelOption.forEach((option) => {
         const parts = (option.HotelOptionId || "").split("|");
@@ -63,6 +68,7 @@ export default function ApiTable({ data }) {
               : "-";
 
             rows.push({
+              hotelName,
               hotelId,
               supplierName,
               checkIn,
@@ -123,6 +129,9 @@ export default function ApiTable({ data }) {
       <table className="data-table">
         <thead>
           <tr>
+            {/* ✅ NEW COLUMN */}
+            <th>Hotel Name</th>
+
             <th className="sortable" onClick={toggleHotelSort}>
               HotelId{hotelArrow}
             </th>
@@ -142,6 +151,9 @@ export default function ApiTable({ data }) {
         <tbody>
           {sortedRows.map((row, idx) => (
             <tr key={idx}>
+              {/* ✅ NEW CELL */}
+              <td>{row.hotelName}</td>
+
               <td>{row.hotelId}</td>
               <td>{row.supplierName}</td>
               <td>{row.checkIn}</td>
