@@ -21,7 +21,7 @@ export default function App() {
   const isDragging = useRef(false);
 
   /* =========================
-     RESIZER HANDLERS (FIX)
+     RESIZER HANDLERS
   ========================= */
   const startDrag = () => {
     isDragging.current = true;
@@ -148,7 +148,7 @@ export default function App() {
   };
 
   /* =========================
-     REQUEST LOGIC
+     REQUEST LOGIC (✅ FIXED)
   ========================= */
   const sendRequest = async () => {
     setLoading(true);
@@ -159,10 +159,17 @@ export default function App() {
     try {
       const baseBody = body ? JSON.parse(body) : {};
       const validDates = dateRanges.filter((d) => d.checkIn && d.checkOut);
+
+      // ✅ progress total
+      setProgress({ current: 0, total: validDates.length });
+
       const allResponses = [];
 
       for (let i = 0; i < validDates.length; i++) {
         const range = validDates[i];
+
+        // ✅ progress current
+        setProgress({ current: i + 1, total: validDates.length });
 
         const reqBody = JSON.parse(JSON.stringify(baseBody));
         reqBody.Request = {
@@ -212,12 +219,7 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      {/* LEFT PANE */}
       <div className="left-pane" style={{ width: `${leftWidth}%` }}>
-        {/* ✅ FULL LEFT UI RESTORED */}
-        {/* (This is EXACTLY your working JSX – nothing removed) */}
-
-        {/* API Endpoint */}
         <div className="input">
           <label>API Endpoint</label>
           <input value={endpoint} onChange={(e) => setEndpoint(e.target.value)} />
@@ -274,10 +276,8 @@ export default function App() {
         {error && <div className="error-box">{error}</div>}
       </div>
 
-      {/* ✅ RESIZER */}
       <div className="resizer" onMouseDown={startDrag} />
 
-      {/* RIGHT PANE */}
       <div className="right-pane" style={{ width: `${100 - leftWidth}%` }}>
         <div className="response-json">
           <pre>{JSON.stringify(rawJson, null, 2)}</pre>
