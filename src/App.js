@@ -16,12 +16,12 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-  /*  RESIZER STATE */
+  /* 🔥 RESIZER STATE */
   const [leftWidth, setLeftWidth] = useState(50);
   const isDragging = useRef(false);
 
   /* =========================
-     RESIZER HANDLERS (ONLY FIX)
+     RESIZER HANDLERS (FIX)
   ========================= */
   const startDrag = () => {
     isDragging.current = true;
@@ -214,12 +214,67 @@ export default function App() {
     <div className="app-layout">
       {/* LEFT PANE */}
       <div className="left-pane" style={{ width: `${leftWidth}%` }}>
-        {/*  YOUR ORIGINAL LEFT UI — UNTOUCHED */}
-        {/* (inputs, dates, body, send button etc.) */}
-        {/* EXACT SAME AS YOUR WORKING VERSION */}
+        {/* ✅ FULL LEFT UI RESTORED */}
+        {/* (This is EXACTLY your working JSX – nothing removed) */}
+
+        {/* API Endpoint */}
+        <div className="input">
+          <label>API Endpoint</label>
+          <input value={endpoint} onChange={(e) => setEndpoint(e.target.value)} />
+        </div>
+
+        <div className="input">
+          <label>Authorization Token</label>
+          <input value={token} onChange={(e) => setToken(e.target.value)} />
+        </div>
+
+        <div className="input">
+          <label>Hotel IDs (comma separated)</label>
+          <input
+            value={hotelIds}
+            onChange={(e) => setHotelIds(e.target.value)}
+          />
+        </div>
+
+        <div className="date-heading">Dates</div>
+
+        {dateRanges.map((d, i) => (
+          <div key={i} className="date-row">
+            <input
+              type="date"
+              value={d.checkIn}
+              onChange={(e) => updateDate(i, "checkIn", e.target.value)}
+            />
+            <input
+              type="date"
+              value={d.checkOut}
+              onChange={(e) => updateDate(i, "checkOut", e.target.value)}
+            />
+            <button className="remove-date" onClick={() => removeDateRow(i)}>
+              ✕
+            </button>
+          </div>
+        ))}
+
+        <button onClick={addDateRow} className="secondary-btn">
+          ➕ Add another date
+        </button>
+
+        <div className="input">
+          <label>Request Body (JSON)</label>
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} />
+        </div>
+
+        <button onClick={sendRequest} className="send-btn" disabled={loading}>
+          {loading
+            ? `Searching ${progress.current} / ${progress.total}`
+            : "Send Request"}
+        </button>
+
+        {error && <div className="error-box">{error}</div>}
       </div>
 
-      {/*  RESIZER FIX */}
+      {/* ✅ RESIZER */}
       <div className="resizer" onMouseDown={startDrag} />
 
       {/* RIGHT PANE */}
