@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import ApiTable from "./components/ApiTable";
 import supplierMap from "./data/suppliers.json";
 import "./styles.css";
@@ -16,7 +16,33 @@ export default function App() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
-  const [expandedDates, setExpandedDates] = useState({});
+
+  /* 🔥 RESIZER STATE */
+  const [leftWidth, setLeftWidth] = useState(50);
+  const isDragging = useRef(false);
+
+  /* =========================
+     RESIZER HANDLERS
+  ========================= */
+  const startDrag = () => {
+    isDragging.current = true;
+    document.addEventListener("mousemove", onDrag);
+    document.addEventListener("mouseup", stopDrag);
+  };
+
+  const onDrag = (e) => {
+    if (!isDragging.current) return;
+    const newWidth = (e.clientX / window.innerWidth) * 100;
+    if (newWidth > 20 && newWidth < 80) {
+      setLeftWidth(newWidth);
+    }
+  };
+
+  const stopDrag = () => {
+    isDragging.current = false;
+    document.removeEventListener("mousemove", onDrag);
+    document.removeEventListener("mouseup", stopDrag);
+  };
 
   /* =========================
      HELPERS
@@ -42,7 +68,7 @@ export default function App() {
   };
 
   /* =========================
-     MATRIX SUMMARY (CORRECT)
+     MATRIX SUMMARY (UNCHANGED)
   ========================= */
   const buildMatrixSummary = () => {
     const summary = {};
@@ -63,8 +89,7 @@ export default function App() {
 
         hotel.HotelOption.forEach((opt) => {
           const supplierCode = opt.HotelOptionId?.split("|")[2];
-          const supplier =
-            supplierMap[supplierCode] || "oth";
+          const supplier = supplierMap[supplierCode] || "oth";
 
           opt.HotelRooms.forEach((group) => {
             group.forEach((room) => {
@@ -85,10 +110,7 @@ export default function App() {
       });
     });
 
-    return {
-      summary,
-      suppliers: Array.from(supplierSet)
-    };
+    return { summary, suppliers: Array.from(supplierSet) };
   };
 
   /* =========================
@@ -160,13 +182,19 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      {/* ✅ LEFT PANE (RESTORED, UNCHANGED) */}
-      <div className="left-pane">
+      {/* LEFT PANE */}
+      <div className="left-pane" style={{ width: `${leftWidth}%` }}>
         <div className="mode-toggle">
-          <button className={mode === "custom" ? "active" : ""} onClick={() => setMode("custom")}>
+          <button
+            className={mode === "custom" ? "active" : ""}
+            onClick={() => setMode("custom")}
+          >
             Custom Search
           </button>
-          <button className={mode === "multi" ? "active" : ""} onClick={() => setMode("multi")}>
+          <button
+            className={mode === "multi" ? "active" : ""}
+            onClick={() => setMode("multi")}
+          >
             Multi Search
           </button>
         </div>
@@ -185,46 +213,86 @@ export default function App() {
           <>
             <div className="input">
               <label>Hotel IDs (comma separated)</label>
-              <input value={hotelIds} onChange={(e) => setHotelIds(e.target.value)} />
+              <input
+                value={hotelIds}
+                onChange={(e) => setHotelIds(e.target.value)}
+              />
             </div>
 
             {dateRanges.map((d, i) => (
               <div key={i} className="date-row">
-                <input type="date" value={d.checkIn} onChange={(e) => updateDate(i, "checkIn", e.target.value)} />
-                <input type="date" value={d.checkOut} onChange={(e) => updateDate(i, "checkOut", e.target.value)} />
-                <button className="remove-date" onClick={() => removeDateRow(i)}>✕</button>
+                <input
+                  type="date"
+                  value={d.checkIn}
+                  onChange={(e) =>
+                    updateDate(i, "checkIn", e.target.value)
+                  }
+                />
+                <input
+                  type="date"
+                  value={d.checkOut}
+                  onChange={(e) =>
+                    updateDate(i, "checkOut", e.target.value)
+                  }
+                />
+                <button
+                  className="remove-date"
+                  onClick={() => removeDateRow(i)}
+                >
+                  ✕
+                </button>
               </div>
             ))}
 
-            <button onClick={addDateRow} className="secondary-btn">➕ Add another date</button>
+            <button onClick={addDateRow} className="secondary-btn">
+              ➕ Add another date
+            </button>
           </>
         )}
 
         <div className="input">
           <label>Request Body (JSON)</label>
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} />
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+          />
         </div>
 
         <button onClick={sendRequest} className="send-btn" disabled={loading}>
-          {loading ? `Searching ${progress.current} / ${progress.total}` : "Send Request"}
+          {loading
+            ? `Searching ${progress.current} / ${progress.total}`
+            : "Send Request"}
         </button>
 
         {loading && (
           <div className="progress-bar">
-            <div className="progress-fill" style={{ width: `${(progress.current / progress.total) * 100}%` }} />
+            <div
+              className="progress-fill"
+              style={{
+                width:
+                  progress.total > 0
+                    ? `${(progress.current / progress.total) * 100}%`
+                    : "0%"
+              }}
+            />
           </div>
         )}
 
         {error && <div className="error-box">{error}</div>}
       </div>
 
-      {/* ✅ RIGHT PANE */}
-      <div className="right-pane">
+      {/* RESIZER */}
+      <div className="resizer" onMouseDown={startDrag} />
+
+      {/* RIGHT PANE */}
+      <div
+        className="right-pane"
+        style={{ width: `${100 - leftWidth}%` }}
+      >
         <div className="response-json">
           <pre>{JSON.stringify(rawJson, null, 2)}</pre>
         </div>
 
-        {/* MATRIX SUMMARY */}
         <div className="response-summary">
           <h4>Cheapest Supplier Coverage</h4>
 
@@ -232,7 +300,9 @@ export default function App() {
             <thead>
               <tr>
                 <th>Date</th>
-                {suppliers.map((s) => <th key={s}>{s}</th>)}
+                {suppliers.map((s) => (
+                  <th key={s}>{s}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -244,7 +314,9 @@ export default function App() {
                     {suppliers.map((s) => (
                       <td
                         key={s}
-                        className={counts[s] === max ? "cheapest-cell" : ""}
+                        className={
+                          counts[s] === max ? "cheapest-cell" : ""
+                        }
                       >
                         {counts[s] || 0}
                       </td>
