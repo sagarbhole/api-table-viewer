@@ -278,3 +278,13 @@ textarea {
   background: #2563eb;
   transition: width 0.3s ease;
 }
+/* =========================
+   DATE HEADING
+========================= */
+.date-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}

@@ -2,12 +2,10 @@ import React, { useState } from "react";
 import supplierMap from "../data/suppliers.json";
 
 export default function ApiTable({ data }) {
-  // Normalize input
   const responses = Array.isArray(data) ? data : data ? [data] : [];
 
-  // 🔽 Sorting states
-  const [priceSort, setPriceSort] = useState(null);   // null | "asc" | "desc"
-  const [hotelSort, setHotelSort] = useState(null);   // null | "asc" | "desc"
+  const [priceSort, setPriceSort] = useState(null);
+  const [hotelSort, setHotelSort] = useState(null);
 
   if (responses.length === 0) {
     return <p>No table data available</p>;
@@ -24,10 +22,9 @@ export default function ApiTable({ data }) {
       const hotelId = hotel.HotelId;
 
       hotel.HotelOption.forEach((option) => {
-        const optionId = option.HotelOptionId || "";
-        const parts = optionId.split("|");
-
+        const parts = (option.HotelOptionId || "").split("|");
         const supplierCodeRaw = parts[2];
+
         const supplierName =
           supplierCodeRaw && supplierMap[supplierCodeRaw]
             ? supplierMap[supplierCodeRaw]
@@ -39,16 +36,6 @@ export default function ApiTable({ data }) {
 
             let freeCancelTill = "N/A";
             let freeCancelPrice = "N/A";
-            let paidCancelFrom = "N/A";
-            let paidCancelPrice = "N/A";
-
-            if (policies.length === 1) {
-              paidCancelFrom = policies[0].FromDate || "N/A";
-              paidCancelPrice =
-                policies[0].CancellationPrice !== undefined
-                  ? `$${policies[0].CancellationPrice}`
-                  : "N/A";
-            }
 
             if (policies.length >= 2) {
               freeCancelTill = policies[0].ToDate || "N/A";
@@ -56,18 +43,13 @@ export default function ApiTable({ data }) {
                 policies[0].CancellationPrice !== undefined
                   ? `$${policies[0].CancellationPrice}`
                   : "N/A";
-
-              paidCancelFrom = policies[1].FromDate || "N/A";
-              paidCancelPrice =
-                policies[1].CancellationPrice !== undefined
-                  ? `$${policies[1].CancellationPrice}`
-                  : "N/A";
             }
 
-            // New: consolidate into Refundable + Refund Info
-            const isRefundable = freeCancelTill && freeCancelTill !== "N/A";
+            const isRefundable = freeCancelTill !== "N/A";
             const refundInfo = isRefundable
-              ? `${freeCancelTill}${freeCancelPrice && freeCancelPrice !== "N/A" ? " — " + freeCancelPrice : ""}`
+              ? `${freeCancelTill}${
+                  freeCancelPrice !== "N/A" ? " — " + freeCancelPrice : ""
+                }`
               : "-";
 
             rows.push({
@@ -78,11 +60,6 @@ export default function ApiTable({ data }) {
               roomType: room.RoomTypeName,
               meal: room.MealName,
               price: room.Price,
-              // status removed (we keep it in object if needed later)
-              freeCancelTill,
-              freeCancelPrice,
-              paidCancelFrom,
-              paidCancelPrice,
               refundable: isRefundable ? "Yes" : "No",
               refundInfo
             });
@@ -92,9 +69,6 @@ export default function ApiTable({ data }) {
     });
   });
 
-  /* =========================
-     SORTING LOGIC
-  ========================= */
   const sortedRows = [...rows];
 
   if (hotelSort) {
@@ -125,12 +99,6 @@ export default function ApiTable({ data }) {
     );
   };
 
-  const hotelArrow =
-    hotelSort === "asc" ? " ▲" : hotelSort === "desc" ? " ▼" : "";
-
-  const priceArrow =
-    priceSort === "asc" ? " ▲" : priceSort === "desc" ? " ▼" : "";
-
   return (
     <div style={{ overflowX: "auto" }}>
       <h3>Table View</h3>
@@ -139,31 +107,18 @@ export default function ApiTable({ data }) {
         <thead>
           <tr>
             <th className="sortable" onClick={toggleHotelSort}>
-              HotelId{hotelArrow}
+              HotelId
             </th>
-
             <th>Supplier</th>
             <th>Check-in</th>
             <th>Check-out</th>
-
             <th>Room Type</th>
             <th>Meal</th>
-
             <th className="sortable" onClick={togglePriceSort}>
-              Price{priceArrow}
+              Price
             </th>
-
-            {/* Status column removed */}
-
-            {/* New: Refundable + Refund Info */}
             <th>Refundable</th>
             <th>Refund Info</th>
-
-            <th>Free Cancel Till</th>
-            <th>Free Cancel Price</th>
-
-            <th>Paid Cancel From</th>
-            <th>Paid Cancel Price</th>
           </tr>
         </thead>
 
@@ -174,21 +129,11 @@ export default function ApiTable({ data }) {
               <td>{row.supplierName}</td>
               <td>{row.checkIn}</td>
               <td>{row.checkOut}</td>
-
               <td>{row.roomType}</td>
               <td>{row.meal}</td>
               <td>{row.price}</td>
-
-              {/* status removed */}
-
               <td>{row.refundable}</td>
               <td>{row.refundInfo}</td>
-
-              <td>{row.freeCancelTill}</td>
-              <td>{row.freeCancelPrice}</td>
-
-              <td>{row.paidCancelFrom}</td>
-              <td>{row.paidCancelPrice}</td>
             </tr>
           ))}
         </tbody>

@@ -68,9 +68,7 @@ export default function App() {
   };
 
   /* =========================
-     MATRIX SUMMARY (UPDATED)
-     - Now also computes Not Found per date
-     - Returns requestedCount and unique found count across responses
+     MATRIX SUMMARY
   ========================= */
   const buildMatrixSummary = (hotelIdsStr = "") => {
     const summary = {};
@@ -78,7 +76,6 @@ export default function App() {
     const notFoundMap = {};
     const foundGlobalSet = new Set();
 
-    // parse requested hotel ids into a set (strings)
     const requestedArr = (hotelIdsStr || "")
       .split(",")
       .map((s) => s.trim())
@@ -104,7 +101,6 @@ export default function App() {
         let cheapestSupplier = null;
         let cheapestPrice = Infinity;
 
-        // Determine cheapest supplier per hotel (existing logic)
         hotel.HotelOption.forEach((opt) => {
           const supplierCode = opt.HotelOptionId?.split("|")[2];
           const supplier = supplierMap[supplierCode] || "oth";
@@ -112,8 +108,8 @@ export default function App() {
           opt.HotelRooms.forEach((group) => {
             group.forEach((room) => {
               const price = Number(room.Price);
-              if (price < cheapestPrice) {
-                cheapestPrice = price;
+              if (R < cheapestPrice) {
+                cheapestPrice = R;
                 cheapestSupplier = supplier;
               }
             });
@@ -127,18 +123,12 @@ export default function App() {
         }
       });
 
-      // compute not-found for this date (only if user provided hotelIds)
-      let notFoundCount = 0;
-      if (requestedCount > 0) {
-        notFoundCount = Array.from(requestedSet).filter(
-          (id) => !foundThisDateSet.has(id)
-        ).length;
-      } else {
-        // If user didn't provide hotelIds, not-found doesn't apply — show 0
-        notFoundCount = 0;
-      }
-
-      notFoundMap[dateKey] = notFoundCount;
+      notFoundMap[dateKey] =
+        requestedCount > 0
+          ? Array.from(requestedSet).filter(
+              (id) => !foundThisDateSet.has(id)
+            ).length
+          : 0;
     });
 
     return {
@@ -255,6 +245,9 @@ export default function App() {
               />
             </div>
 
+            {/* ✅ DATE HEADING ADDED */}
+            <div className="date-heading">Dates</div>
+
             {dateRanges.map((d, i) => (
               <div key={i} className="date-row">
                 <input
@@ -333,7 +326,8 @@ export default function App() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h4 style={{ margin: 0 }}>Cheapest Supplier Coverage</h4>
             <div style={{ fontSize: 13 }}>
-              Found <strong>{foundUniqueCount}</strong> hotels out of <strong>{requestedCount || "—"}</strong> searched
+              Found <strong>{foundUniqueCount}</strong> hotels out of{" "}
+              <strong>{requestedCount || "—"}</strong> searched
             </div>
           </div>
 
@@ -350,7 +344,9 @@ export default function App() {
             <tbody>
               {Object.entries(summary).map(([date, counts]) => {
                 const supplierCounts = suppliers.map((s) => counts[s] || 0);
-                const max = supplierCounts.length ? Math.max(...supplierCounts) : 0;
+                const max = supplierCounts.length
+                  ? Math.max(...supplierCounts)
+                  : 0;
                 return (
                   <tr key={date}>
                     <td>{notFoundMap[date] || 0}</td>
@@ -358,7 +354,11 @@ export default function App() {
                     {suppliers.map((s) => (
                       <td
                         key={s}
-                        className={counts[s] === max && max > 0 ? "cheapest-cell" : ""}
+                        className={
+                          counts[s] === max && max > 0
+                            ? "cheapest-cell"
+                            : ""
+                        }
                       >
                         {counts[s] || 0}
                       </td>
